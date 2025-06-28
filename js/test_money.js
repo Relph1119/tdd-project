@@ -23,6 +23,23 @@ class Money {
     }
 }
 
+class Portfolio {
+    constructor() {
+        this.moneys = [];
+    }
+
+    add(...moneys) {
+        this.moneys = this.moneys.concat(moneys);
+    }
+
+    evaluate(currency) {
+        let total = this.moneys.reduce((sum, money) => {
+            return sum + money.amount;
+        }, 0);
+        return new Money(total, currency);
+    }
+}
+
 let fiverDollars = new Money(5, "USD");
 let tenDollars = new Money(10, "USD");
 assert.deepStrictEqual(fiverDollars.times(2), tenDollars);
@@ -36,3 +53,8 @@ let actualMoneyAfterDivision = originalMoney.divide(4);
 let expectedMoneyAfterDivision = new Money(1000.5, "KRW");
 // 对比两个对象，全等运算符
 assert.deepStrictEqual(actualMoneyAfterDivision, expectedMoneyAfterDivision);
+
+let fiftenDollars = new Money(15, "USD");
+let portfolio = new Portfolio();
+portfolio.add(fiverDollars, tenDollars);
+assert.deepStrictEqual(portfolio.evaluate("USD"), fiftenDollars);
