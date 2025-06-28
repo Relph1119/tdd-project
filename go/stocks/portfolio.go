@@ -1,5 +1,7 @@
 package stocks
 
+import "errors"
+
 type Portfolio []Money
 
 func (p Portfolio) Add(money Money) Portfolio {
@@ -7,24 +9,47 @@ func (p Portfolio) Add(money Money) Portfolio {
 	return p
 }
 
-func (p Portfolio) Evaluate(currency string) Money {
+func (p Portfolio) Evaluate(currency string) (Money, error) {
+	/* 对于每个Money结构体：
+	 *    试着用convert方法把Money转换为目标货币，并将转换后的金额记入总额
+	 *        如果convert出现了故障：
+	 *            那么把这次故障所涉及的来源货币与目标货币这两个要素提取出来。
+	 * 如果始终没有遇到故障：
+	 *    那么返回一个以目标货币为币种，以总额为金额的Money对象；并且返回nil作为错误，以表示Evaluate方法执行无误。
+	 * 否则：
+	 *    返回一个空白的Money结构体，并返回一条错误消息；把执行过程中遇到的各种故障全都写在这条消息里。
+	 */
 	total := 0.0
+	failedConversions := make([]string, 0)
 	for _, m := range p {
 		// 转换目标货币
-		total = total + convert(m, currency)
+		if convertedAmount, ok := convert(m, currency); ok {
+			total = total + convertedAmount
+		} else {
+			failedConversions = append(failedConversions, m.currency+"->"+currency)
+		}
 	}
-	return Money{amount: total, currency: currency}
+	if len(failedConversions) == 0 {
+		return NewMoney(total, currency), nil
+	}
+	failures := "["
+	for _, f := range failedConversions {
+		failures = failures + f + ","
+	}
+	failures = failures + "]"
+	return NewMoney(0, ""), errors.New("Missing exchange rate(s):" + failures)
 }
 
-func convert(money Money, currency string) float64 {
+func convert(money Money, currency string) (float64, bool) {
 	exchangeRates := map[string]float64{
 		"EUR->USD": 1.2,
 		"USD->KRW": 1100,
 	}
 
 	if money.currency == currency {
-		return money.amount
+		return money.amount, true
 	}
 	key := money.currency + "->" + currency
-	return money.amount * exchangeRates[key]
+	rate, ok := exchangeRates[key]
+	return money.amount * rate, ok
 }

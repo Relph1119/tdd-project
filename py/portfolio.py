@@ -7,8 +7,6 @@
 @project: tdd-project
 @desc: 
 """
-import functools
-import operator
 
 from money import Money
 
@@ -21,10 +19,19 @@ class Portfolio:
         self.moneys.extend(moneys)
 
     def evaluate(self, currency):
-        total = functools.reduce(
-            # 让加法函数运用到map所映射出来的各个amount上
-            operator.add, map(lambda m: self.__convert(m, currency), self.moneys), 0)
-        return Money(total, currency)
+        total = 0.0
+        failures = []
+        for m in self.moneys:
+            try:
+                total += self.__convert(m, currency)
+            except KeyError as ke:
+                failures.append(ke)
+
+        if len(failures) == 0:
+            return Money(total, currency)
+
+        failureMessages = ",".join(f.args[0] for f in failures)
+        raise Exception("Missing exchange rate(s):[" + failureMessages + "]")
 
     def __convert(self, aMoney, aCurrency):
         exchangeRates = {'EUR->USD': 1.2, 'USD->KRW': 1100}
