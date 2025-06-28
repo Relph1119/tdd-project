@@ -16,6 +16,7 @@ from money import Money
 class Portfolio:
     def __init__(self):
         self.moneys = []
+        self._euro_to_dollar = 1.2
 
     def add(self, *moneys):
         self.moneys.extend(moneys)
@@ -23,5 +24,11 @@ class Portfolio:
     def evaluate(self, currency):
         total = functools.reduce(
             # 让加法函数运用到map所映射出来的各个amount上
-            operator.add, map(lambda m: m.amount, self.moneys), 0)
+            operator.add, map(lambda m: self.__convert(m, currency), self.moneys), 0)
         return Money(total, currency)
+
+    def __convert(self, aMoney, currency):
+        if aMoney.currency == currency:
+            return aMoney.amount
+        else:
+            return aMoney.amount * self._euro_to_dollar
