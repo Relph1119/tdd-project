@@ -11,7 +11,7 @@ const Portfolio = require('./portfolio');
 const Bank = require('./bank');
 
 class MoneyTest {
-    constructor() {
+    setUp() {
         this.bank = new Bank();
         this.bank.addExchangeRate("EUR", "USD", 1.2);
         this.bank.addExchangeRate("USD", "KRW", 1100);
@@ -69,20 +69,18 @@ class MoneyTest {
         assert.throws(() => portfolio.evaluate(this.bank, "Kalganid"), expectedError);
     }
 
-    testConversion() {
-        let bank = new Bank();
-        bank.addExchangeRate("EUR", "USD", 1.2);
+    testConversionWithDifferentRatesBetweenTwoCurrencies() {
         let tenEuros = new Money(10, "EUR");
-        assert.deepStrictEqual(bank.convert(tenEuros, "USD"), new Money(12, "USD"));
+        assert.deepStrictEqual(this.bank.convert(tenEuros, "USD"), new Money(12, "USD"));
+
+        this.bank.addExchangeRate("EUR", "USD", 1.3);
+        assert.deepStrictEqual(this.bank.convert(tenEuros, "USD"), new Money(13, "USD"));
     }
 
     testConversionWithMissingExchangeRate() {
-        let bank = new Bank();
         let tenEuros = new Money(10, "EUR");
         let expectedError = new Error("EUR->Kalganid");
-        assert.throws(function () {
-            bank.convert(tenEuros, "Kalganid")
-        }, expectedError);
+        assert.throws(() => this.bank.convert(tenEuros, "Kalganid"), expectedError);
     }
 
     getAllTestMethods() {
@@ -96,15 +94,26 @@ class MoneyTest {
         return testMethods;
     }
 
+    randomizeTestOrder(testMethods) {
+        for (let i = testMethods.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [testMethods[i], testMethods[j]] = [testMethods[j], testMethods[i]];
+        }
+        return testMethods;
+    }
+
     runAllTests() {
         // 获取所有的测试方法名
         let testMethods = this.getAllTestMethods();
+        // 随机打乱测试方法的顺序
+        testMethods = this.randomizeTestOrder(testMethods);
         testMethods.forEach(m => {
             console.log("Running %s()", m);
             // 利用反射机制取得该方法的method对象
             let method = Reflect.get(this, m);
             // 使用try-catch处理断言错误并保证后续的测试方法依然能够执行
             try {
+                this.setUp()
                 // 不带参数地调用测试方法
                 Reflect.apply(method, this, []);
             } catch (e) {
