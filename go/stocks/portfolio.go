@@ -33,10 +33,15 @@ func (p Portfolio) Evaluate(bank Bank, currency string) (*Money, error) {
 		totalMoney := NewMoney(total, currency)
 		return &totalMoney, nil
 	}
+	failures := createFailureMessage(failedConversions)
+	return nil, errors.New("Missing exchange rate(s):" + failures)
+}
+
+func createFailureMessage(failedConversions []string) string {
 	failures := "["
 	for _, f := range failedConversions {
 		failures = failures + f + ","
 	}
 	failures = failures + "]"
-	return nil, errors.New("Missing exchange rate(s):" + failures)
+	return failures
 }

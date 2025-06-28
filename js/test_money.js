@@ -83,6 +83,26 @@ class MoneyTest {
         assert.throws(() => this.bank.convert(tenEuros, "Kalganid"), expectedError);
     }
 
+    testAdditionWithTestDouble() {
+        const moneyCount = 10;
+        let moneys = [];
+        for (let i = 0; i < moneyCount; i++) {
+            moneys.push(
+                new Money(Math.random(Number.MAX_SAFE_INTEGER), "Does Not Matter")
+            );
+        }
+        let bank = {
+            convert: function() {
+                return new Money(Math.PI, "Kalganid");
+            }
+        };
+        let arbitraryResult = new Money(moneyCount * Math.PI, "Kalganid");
+
+        let portfolio = new Portfolio();
+        portfolio.add(...moneys);
+        assert.deepStrictEqual(portfolio.evaluate(bank, "Kalganid"), arbitraryResult);
+    }
+
     getAllTestMethods() {
         let moneyPrototype = MoneyTest.prototype;
         // 获取所有的属性
