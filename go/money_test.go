@@ -5,6 +5,12 @@ import (
 	"testing"
 )
 
+func assertEqual(t *testing.T, expected s.Money, actual s.Money) {
+	if expected != actual {
+		t.Errorf("Expected %+v Got %+v", expected, actual)
+	}
+}
+
 // 测试方法，必须以Test开头，并拥有一个*testing.T类型的参数
 func TestMultiplication(t *testing.T) {
 	tenEuros := s.NewMoney(10, "EUR")
@@ -49,8 +55,17 @@ func TestAdditionOfDollarsAndEuros(t *testing.T) {
 	assertEqual(t, expectedValue, actualValue)
 }
 
-func assertEqual(t *testing.T, expected s.Money, actual s.Money) {
-	if expected != actual {
-		t.Errorf("Expected %+v Got %+v", expected, actual)
-	}
+func TestAdditionOfDollarsAndWons(t *testing.T) {
+	var portfolio s.Portfolio
+
+	oneDollar := s.NewMoney(1, "USD")
+	elevenHundredWon := s.NewMoney(1100, "KRW")
+
+	portfolio = portfolio.Add(oneDollar)
+	portfolio = portfolio.Add(elevenHundredWon)
+
+	expectedValue := s.NewMoney(2200, "KRW")
+	actualValue := portfolio.Evaluate("KRW")
+
+	assertEqual(t, expectedValue, actualValue)
 }
